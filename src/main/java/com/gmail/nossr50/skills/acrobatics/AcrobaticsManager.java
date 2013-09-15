@@ -27,12 +27,24 @@ public class AcrobaticsManager extends SkillManager {
         super(mcMMOPlayer, SkillType.ACROBATICS);
     }
 
+    /**
+     * Check if the player is allowed to use Roll,
+     * checks permissions and exploit prevention.
+     *
+     * @return true if the player is allowed to use Roll
+     */
     public boolean canRoll() {
         Player player = getPlayer();
 
         return (player.getItemInHand().getType() != Material.ENDER_PEARL) && !exploitPrevention() && Permissions.roll(player);
     }
 
+    /**
+     * Check if the player is allowed to use Dodge
+     *
+     * @param damager {@link Entity} that caused damage
+     * @return true if the player can Dodge damage from damager
+     */
     public boolean canDodge(Entity damager) {
         if (Permissions.dodge(getPlayer())) {
             if (damager instanceof LightningStrike && Acrobatics.dodgeLightningDisabled) {
@@ -125,6 +137,11 @@ public class AcrobaticsManager extends SkillManager {
         return damage;
     }
 
+    /**
+     * Check if exploit prevention should kick in.
+     *
+     * @return true when exploits are detected, false if otherwise
+     */
     public boolean exploitPrevention() {
         if (!Config.getInstance().getAcrobaticsAFKDisabled()) {
             return false;
@@ -144,14 +161,34 @@ public class AcrobaticsManager extends SkillManager {
         return fallTries > Config.getInstance().getAcrobaticsAFKMaxTries();
     }
 
+    /**
+     * Check if Roll was successful
+     *
+     * @param maxChance Maximum chance of a successful Roll
+     * @param maxLevel Maximum bonus level of Roll
+     * @return true if it was a successful Roll, false otherwise
+     */
     private boolean isSuccessfulRoll(double maxChance, int maxLevel) {
         return (maxChance / maxLevel) * Math.min(getSkillLevel(), maxLevel) > Misc.getRandom().nextInt(activationChance);
     }
 
+    /**
+     * Check if a fall is fatal
+     *
+     * @param damage amount of damage taken from the fall
+     * @return true if the fall is fatal, false otherwise
+     */
     private boolean isFatal(double damage) {
         return getPlayer().getHealth() - damage < 1;
     }
 
+    /**
+     * Calculate the amount of XP gained from falling
+     *
+     * @param damage amount of damage taken in the fall
+     * @param isRoll boolean if the player was rolling
+     * @return amount of XP gained
+     */
     private float calculateRollXP(double damage, boolean isRoll) {
         ItemStack boots = getPlayer().getInventory().getBoots();
         float xp = (float) (damage * (isRoll ? Acrobatics.rollXpModifier : Acrobatics.fallXpModifier));

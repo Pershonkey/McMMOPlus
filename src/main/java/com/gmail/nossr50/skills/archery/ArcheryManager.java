@@ -25,14 +25,30 @@ public class ArcheryManager extends SkillManager {
         super(mcMMOPlayer, SkillType.ARCHERY);
     }
 
+    /**
+     * Check if the target can be dazed. Checks if target is valid and if the player has sufficient permissions.
+     *
+     * @param target the {@link LivingEntity} object of the target to check
+     * @return true if the target can be dazed, false otherwise
+     */
     public boolean canDaze(LivingEntity target) {
         return target instanceof Player && Permissions.daze(getPlayer());
     }
 
+    /**
+     * Check if the player can use SkillShot.
+     *
+     * @return true if the player can use SkillShot, false otherwise
+     */
     public boolean canSkillShot() {
         return getSkillLevel() >= Archery.skillShotIncreaseLevel && Permissions.bonusDamage(getPlayer(), skill);
     }
 
+    /**
+     * Check if the player can use TrackArrows.
+     *
+     * @return true if the player can use TrackArrows, false otherwise
+     */
     public boolean canTrackArrows() {
         return Permissions.arrowRetrieval(getPlayer());
     }
@@ -70,6 +86,7 @@ public class ArcheryManager extends SkillManager {
      *
      * @param defender The {@link Player} being affected by the ability
      * @param arrow The {@link Arrow} that was fired
+     * @return amount of damage from Daze
      */
     public double daze(Player defender, Arrow arrow) {
         if (!SkillUtils.activationSuccessful(getSkillLevel(), getActivationChance(), Archery.dazeMaxBonus, Archery.dazeMaxBonusLevel)) {
@@ -99,6 +116,7 @@ public class ArcheryManager extends SkillManager {
      * @param target The {@link LivingEntity} being affected by the ability
      * @param damage The amount of damage initially dealt by the event
      * @param arrow The {@link Arrow} that was fired
+     * @return amount of damage from Skill Shot
      */
     public double skillShot(LivingEntity target, double damage, Arrow arrow) {
         double damageBonusPercent = Math.min(((getSkillLevel() / Archery.skillShotIncreaseLevel) * Archery.skillShotIncreasePercentage), Archery.skillShotMaxBonusPercentage);

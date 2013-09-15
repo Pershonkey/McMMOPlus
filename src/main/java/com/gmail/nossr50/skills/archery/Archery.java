@@ -30,6 +30,12 @@ public class Archery {
 
     public static final double DISTANCE_XP_MULTIPLIER = 0.025;
 
+    /**
+     * Increment tracked arrow count for a LivingEntity,
+     * if the entity isn't tracked yet it will get added to the tracker.
+     *
+     * @param livingEntity the {@link LivingEntity} to increment the arrow count for
+     */
     protected static void incrementTrackerValue(LivingEntity livingEntity) {
         for (TrackedEntity trackedEntity : trackedEntities) {
             if (trackedEntity.getLivingEntity().getEntityId() == livingEntity.getEntityId()) {
@@ -41,6 +47,11 @@ public class Archery {
         addToTracker(livingEntity); // If the entity isn't tracked yet
     }
 
+    /**
+     * Add a LivingEntity to the tracker.
+     *
+     * @param livingEntity the {@link LivingEntity} to add.
+     */
     protected static void addToTracker(LivingEntity livingEntity) {
         TrackedEntity trackedEntity = new TrackedEntity(livingEntity);
 
@@ -48,6 +59,11 @@ public class Archery {
         trackedEntities.add(trackedEntity);
     }
 
+    /**
+     * Remove a TrackedEntity from the tracker.
+     *
+     * @param trackedEntity the {@link TrackedEntity} to remove.
+     */
     protected static void removeFromTracker(TrackedEntity trackedEntity) {
         trackedEntities.remove(trackedEntity);
     }
@@ -69,12 +85,24 @@ public class Archery {
         }
     }
 
+    /**
+     * Convert a string to a Location object.
+     *
+     * @param location String containing the location information
+     * @return the {@link Location} parsed from the string
+     */
     public static Location stringToLocation(String location) {
         String[] values = location.split(",");
 
         return new Location(mcMMO.p.getServer().getWorld(values[0]), Double.parseDouble(values[1]), Double.parseDouble(values[2]), Double.parseDouble(values[3]), Float.parseFloat(values[4]), Float.parseFloat(values[5]));
     }
 
+    /**
+     * Convert a Location object to a String.
+     *
+     * @param location {@link Location} to convert
+     * @return the String containing the location information
+     */
     public static String locationToString(Location location) {
         return location.getWorld().getName() + "," + location.getX() + "," + location.getY() + "," + location.getZ() + "," + location.getYaw() + "," + location.getPitch();
     }
