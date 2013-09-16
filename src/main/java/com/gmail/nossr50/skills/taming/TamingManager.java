@@ -1,5 +1,9 @@
 package com.gmail.nossr50.skills.taming;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+
 import org.bukkit.Location;
 import org.bukkit.Sound;
 import org.bukkit.entity.Entity;
@@ -11,6 +15,8 @@ import org.bukkit.entity.Player;
 import org.bukkit.entity.Tameable;
 import org.bukkit.entity.Wolf;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
 
 import com.gmail.nossr50.mcMMO;
 import com.gmail.nossr50.config.AdvancedConfig;
@@ -20,12 +26,14 @@ import com.gmail.nossr50.datatypes.skills.SecondaryAbility;
 import com.gmail.nossr50.datatypes.skills.SkillType;
 import com.gmail.nossr50.datatypes.skills.XPGainReason;
 import com.gmail.nossr50.events.fake.FakeEntityTameEvent;
+import com.gmail.nossr50.events.skills.secondaryabilities.SecondaryAbilityWeightedActivationCheckEvent;
 import com.gmail.nossr50.locale.LocaleLoader;
 import com.gmail.nossr50.runnables.skills.BleedTimerTask;
 import com.gmail.nossr50.skills.SkillManager;
 import com.gmail.nossr50.util.Misc;
 import com.gmail.nossr50.util.Permissions;
 import com.gmail.nossr50.util.StringUtils;
+import com.gmail.nossr50.util.player.UserManager;
 import com.gmail.nossr50.util.skills.ParticleEffectUtils;
 import com.gmail.nossr50.util.skills.SkillUtils;
 
@@ -33,6 +41,8 @@ public class TamingManager extends SkillManager {
     public TamingManager(McMMOPlayer mcMMOPlayer) {
         super(mcMMOPlayer, SkillType.TAMING);
     }
+
+    private static HashMap<EntityType, List<TrackedTamingEntity>> summonedEntities = new HashMap<EntityType, List<TrackedTamingEntity>>();
 
     public boolean canUseThickFur() {
         return getSkillLevel() >= Taming.thickFurUnlockLevel && Permissions.secondaryAbilityEnabled(getPlayer(), SecondaryAbility.THICK_FUR);
@@ -64,6 +74,10 @@ public class TamingManager extends SkillManager {
 
     public boolean canUseBeastLore() {
         return Permissions.secondaryAbilityEnabled(getPlayer(), SecondaryAbility.BEAST_LORE);
+    }
+
+    public boolean canUseCharge() {
+        return getSkillLevel() >= Taming.chargeUnlockLevel && Permissions.secondaryAbilityEnabled(getPlayer(), SecondaryAbility.CHARGE);
     }
 
     /**
@@ -200,6 +214,56 @@ public class TamingManager extends SkillManager {
         owner.sendMessage(LocaleLoader.getString("Taming.Listener.Wolf"));
     }
 
+    public void charge(Wolf wolf) {
+        double chance = AdvancedConfig.getInstance().getChargeChance() / activationChance;
+        SecondaryAbilityWeightedActivationCheckEvent event = new SecondaryAbilityWeightedActivationCheckEvent(getPlayer(), SecondaryAbility.CHARGE, chance);
+        mcMMO.p.getServer().getPluginManager().callEvent(event);
+        if ((event.getChance() * activationChance) <= Misc.getRandom().nextInt(activationChance)) {
+            return;
+        }
+
+        int duration = 0;
+        int amplifier = 0;
+
+        if (wolf.hasPotionEffect(PotionEffectType.SPEED)) {
+            for (PotionEffect effect : wolf.getActivePotionEffects()) {
+                if (effect.getType() == PotionEffectType.SPEED) {
+                    duration = effect.getDuration();
+                    amplifier = effect.getAmplifier();
+                    break;
+                }
+            }
+        }
+
+        int ticks = 20 * 5;
+
+        PotionEffect abilityBuff = new PotionEffect(PotionEffectType.SPEED, duration + ticks, amplifier + 3);
+        wolf.addPotionEffect(abilityBuff, true);
+        ParticleEffectUtils.playSmokeEffect(wolf);
+        Player owner = getPlayer();
+        owner.sendMessage("CHARGE!");
+    }
+
+    public void pummel(LivingEntity target, Wolf wolf) {
+        double chance = 10 / activationChance;
+        SecondaryAbilityWeightedActivationCheckEvent event = new SecondaryAbilityWeightedActivationCheckEvent(getPlayer(), SecondaryAbility.PUMMEL, chance);
+        mcMMO.p.getServer().getPluginManager().callEvent(event);
+        if ((event.getChance() * activationChance) <= Misc.getRandom().nextInt(activationChance)) {
+            return;
+        }
+
+        ParticleEffectUtils.playGreaterImpactEffect(target);
+        target.setVelocity(wolf.getLocation().getDirection().normalize().multiply(1.5D));
+
+        if (target instanceof Player) {
+            Player defender = (Player) target;
+
+            if (UserManager.getPlayer(defender).useChatNotifications()) {
+                defender.sendMessage("Wolf pummeled at you");
+            }
+        }
+    }
+
     /**
      * Handle the Call of the Wild ability.
      *
@@ -226,6 +290,10 @@ public class TamingManager extends SkillManager {
         int tamingCOTWLength = Config.getInstance().getTamingCOTWLength(type);
 
         for (int i = 0; i < amount; i++) {
+            if (!summonAmountCheck(type)) {
+                return;
+            }
+
             LivingEntity entity = (LivingEntity) player.getWorld().spawnEntity(location, type);
 
             FakeEntityTameEvent event = new FakeEntityTameEvent(entity, player);
@@ -239,9 +307,7 @@ public class TamingManager extends SkillManager {
             ((Tameable) entity).setOwner(player);
             entity.setRemoveWhenFarAway(false);
 
-            if (tamingCOTWLength > 0) {
-                Taming.addToTracker(entity);
-            }
+            addToTracker(entity);
 
             switch (type) {
                 case OCELOT:
@@ -270,7 +336,6 @@ public class TamingManager extends SkillManager {
 
             if (Permissions.renamePets(player)) {
                 entity.setCustomName(LocaleLoader.getString("Taming.Summon.Name.Format", player.getName(), StringUtils.getPrettyEntityTypeString(type)));
-                entity.setCustomNameVisible(true);
             }
 
             ParticleEffectUtils.playCallOfTheWildEffect(entity);
@@ -303,5 +368,38 @@ public class TamingManager extends SkillManager {
         }
 
         return true;
+    }
+
+    private boolean summonAmountCheck(EntityType entityType) {
+        Player player = getPlayer();
+
+        int maxAmountSummons = Config.getInstance().getTamingCOTWMaxAmount(entityType);
+
+        if (maxAmountSummons <= 0) {
+            return true;
+        }
+
+        int summonAmount = summonedEntities.get(entityType).size();
+
+        if (summonAmount >= maxAmountSummons) {
+            player.sendMessage(LocaleLoader.getString("Taming.Summon.Fail.TooMany", maxAmountSummons));
+            return false;
+        }
+
+        return true;
+    }
+
+    protected static void addToTracker(LivingEntity livingEntity) {
+        TrackedTamingEntity trackedEntity = new TrackedTamingEntity(livingEntity);
+
+        if (!summonedEntities.containsKey(livingEntity.getType())) {
+            summonedEntities.put(livingEntity.getType(), new ArrayList<TrackedTamingEntity>());
+        }
+
+        summonedEntities.get(livingEntity.getType()).add(trackedEntity);
+    }
+
+    protected static void removeFromTracker(TrackedTamingEntity trackedEntity) {
+        summonedEntities.get(trackedEntity.getLivingEntity().getType()).remove(trackedEntity);
     }
 }

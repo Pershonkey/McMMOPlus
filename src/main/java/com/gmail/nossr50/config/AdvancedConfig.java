@@ -828,6 +828,9 @@ public class AdvancedConfig extends AutoUpdateConfigLoader {
     public int getShockProofUnlock() { return config.getInt("Skills.Taming.ShockProof.UnlockLevel", 500); }
     public double getShockProofModifier() { return config.getDouble("Skills.Taming.ShockProof.Modifier", 6.0D); }
 
+    public int getChargeChance() { return config.getInt("Skills.Taming.Charge_Chance", 25); }
+    public int getChargeUnlock() { return config.getInt("Skills.Taming.Charge_UnlockLevel", 50); }
+
     public int getSharpenedClawsUnlock() { return config.getInt("Skills.Taming.SharpenedClaws.UnlockLevel", 750); }
     public double getSharpenedClawsBonus() { return config.getDouble("Skills.Taming.SharpenedClaws.Bonus", 2.0D); }
 
