@@ -25,6 +25,8 @@ public class PlayerProfile {
     /* HUDs */
     private MobHealthbarType mobHealthbarType;
 
+    private int scoreboardTipsShown;
+
     /* Skill Data */
     private final Map<SkillType, Integer>   skills     = new HashMap<SkillType, Integer>();   // Skill & Level
     private final Map<SkillType, Float>     skillsXp   = new HashMap<SkillType, Float>();     // Skill & XP
@@ -34,6 +36,7 @@ public class PlayerProfile {
         this.playerName = playerName;
 
         mobHealthbarType = Config.getInstance().getMobHealthbarDefault();
+        scoreboardTipsShown = 0;
 
         for (AbilityType abilityType : AbilityType.values()) {
             abilityDATS.put(abilityType, 0);
@@ -50,9 +53,10 @@ public class PlayerProfile {
         this.loaded = isLoaded;
     }
 
-    public PlayerProfile(String playerName, Map<SkillType, Integer> levelData, Map<SkillType, Float> xpData, Map<AbilityType, Integer> cooldownData, MobHealthbarType mobHealthbarType) {
+    public PlayerProfile(String playerName, Map<SkillType, Integer> levelData, Map<SkillType, Float> xpData, Map<AbilityType, Integer> cooldownData, MobHealthbarType mobHealthbarType, int scoreboardTipsShown) {
         this.playerName = playerName;
         this.mobHealthbarType = mobHealthbarType;
+        this.scoreboardTipsShown = scoreboardTipsShown;
 
         skills.putAll(levelData);
         skillsXp.putAll(xpData);
@@ -71,7 +75,7 @@ public class PlayerProfile {
         }
 
         // TODO should this part be synchronized?
-        PlayerProfile profileCopy = new PlayerProfile(playerName, ImmutableMap.copyOf(skills), ImmutableMap.copyOf(skillsXp), ImmutableMap.copyOf(abilityDATS), mobHealthbarType);
+        PlayerProfile profileCopy = new PlayerProfile(playerName, ImmutableMap.copyOf(skills), ImmutableMap.copyOf(skillsXp), ImmutableMap.copyOf(abilityDATS), mobHealthbarType, scoreboardTipsShown);
         changed = !mcMMO.getDatabaseManager().saveUser(profileCopy);
 
         if (changed) {
@@ -97,6 +101,20 @@ public class PlayerProfile {
 
     public void setMobHealthbarType(MobHealthbarType mobHealthbarType) {
         this.mobHealthbarType = mobHealthbarType;
+    }
+
+    public int getScoreboardTipsShown() {
+        return scoreboardTipsShown;
+    }
+
+    public void setScoreboardTipsShown(int scoreboardTipsShown) {
+        this.scoreboardTipsShown = scoreboardTipsShown;
+    }
+
+    public void increaseTipsShown() {
+        changed = true;
+
+        setScoreboardTipsShown(getScoreboardTipsShown() + 1);
     }
 
     /*

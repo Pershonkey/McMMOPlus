@@ -1188,6 +1188,7 @@ public final class SQLDatabaseManager implements DatabaseManager {
         Map<SkillType, Float>     skillsXp   = new HashMap<SkillType, Float>();     // Skill & XP
         Map<AbilityType, Integer> skillsDATS = new HashMap<AbilityType, Integer>(); // Ability & Cooldown
         MobHealthbarType mobHealthbarType;
+        int scoreboardTipsShown;
 
         final int OFFSET_SKILLS = 0; // TODO update these numbers when the query changes (a new skill is added)
         final int OFFSET_XP = 13;
@@ -1242,7 +1243,14 @@ public final class SQLDatabaseManager implements DatabaseManager {
             mobHealthbarType = Config.getInstance().getMobHealthbarDefault();
         }
 
-        return new PlayerProfile(playerName, skills, skillsXp, skillsDATS, mobHealthbarType);
+        try {
+            scoreboardTipsShown = result.getInt(OFFSET_OTHER + 3);
+        }
+        catch (Exception e) {
+            scoreboardTipsShown = 0;
+        }
+
+        return new PlayerProfile(playerName, skills, skillsXp, skillsDATS, mobHealthbarType, scoreboardTipsShown);
     }
 
     private void printErrors(SQLException ex) {
