@@ -132,7 +132,7 @@ public final class SQLDatabaseManager implements DatabaseManager {
         MobHealthbarType mobHealthbarType = profile.getMobHealthbarType();
 
         success &= saveLogin(userId, ((int) (System.currentTimeMillis() / Misc.TIME_CONVERSION_FACTOR)));
-        success &= saveHuds(userId, (mobHealthbarType == null ? Config.getInstance().getMobHealthbarDefault().toString() : mobHealthbarType.toString()));
+        success &= saveHuds(userId, (mobHealthbarType == null ? Config.getInstance().getMobHealthbarDefault().toString() : mobHealthbarType.toString()), profile.getScoreboardTipsShown());
         success &= saveLongs(
                 "UPDATE " + tablePrefix + "cooldowns SET "
                     + "  mining = ?, woodcutting = ?, unarmed = ?"
@@ -657,6 +657,7 @@ public final class SQLDatabaseManager implements DatabaseManager {
         write("CREATE TABLE IF NOT EXISTS `" + tablePrefix + "huds` ("
                 + "`user_id` int(10) unsigned NOT NULL,"
                 + "`mobhealthbar` varchar(50) NOT NULL DEFAULT '" + Config.getInstance().getMobHealthbarDefault() + "',"
+                + "`scoreboardtips` int(10) unsigned NOT NULL DEFAULT '0',"
                 + "PRIMARY KEY (`user_id`)) "
                 + "DEFAULT CHARSET=latin1;");
         write("CREATE TABLE IF NOT EXISTS `" + tablePrefix + "cooldowns` ("
@@ -836,7 +837,12 @@ public final class SQLDatabaseManager implements DatabaseManager {
                     write("ALTER TABLE `"+tablePrefix + "skills` ADD `alchemy` int(10) NOT NULL DEFAULT '0' ;");
                     write("ALTER TABLE `"+tablePrefix + "experience` ADD `alchemy` int(10) NOT NULL DEFAULT '0' ;");
                     break;
-                    
+
+                case SCOREBOARD_TIPS:
+                    mcMMO.p.getLogger().info("Updating mcMMO MySQL tables for scoreboard tips...");
+                    write("ALTER TABLE `" + tablePrefix + "huds` ADD `scoreboardtips` int(10) NOT NULL DEFAULT '0' ;");
+                    break;
+
                 default:
                     break;
             }
@@ -1027,6 +1033,11 @@ public final class SQLDatabaseManager implements DatabaseManager {
             statement.setInt(1, id);
             statement.execute();
             statement.close();
+
+            statement = connection.prepareStatement("INSERT IGNORE INTO " + tablePrefix + "huds (user_id, scoreboardtips) VALUES (? , 0)");
+            statement.setInt(1, id);
+            statement.execute();
+            statement.close();
         }
         catch (SQLException ex) {
             printErrors(ex);
@@ -1157,13 +1168,14 @@ public final class SQLDatabaseManager implements DatabaseManager {
         }
     }
 
-    private boolean saveHuds(int userId, String mobHealthBar) {
+    private boolean saveHuds(int userId, String mobHealthBar, int scoreboardTips) {
         PreparedStatement statement = null;
 
         try {
-            statement = connection.prepareStatement("UPDATE " + tablePrefix + "huds SET mobhealthbar = ? WHERE user_id = ?");
+            statement = connection.prepareStatement("UPDATE " + tablePrefix + "huds SET mobhealthbar = ? scoreboardTips = ? WHERE user_id = ?");
             statement.setString(1, mobHealthBar);
-            statement.setInt(2, userId);
+            statement.setInt(2, scoreboardTips);
+            statement.setInt(3, userId);
             statement.execute();
             return true;
         }
