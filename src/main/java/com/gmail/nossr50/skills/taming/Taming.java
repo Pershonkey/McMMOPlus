@@ -1,8 +1,5 @@
 package com.gmail.nossr50.skills.taming;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.bukkit.EntityEffect;
 import org.bukkit.entity.AnimalTamer;
 import org.bukkit.entity.EntityType;
@@ -33,7 +30,7 @@ public class Taming {
     public static int    thickFurUnlockLevel = AdvancedConfig.getInstance().getThickFurUnlock();
     public static double thickFurModifier    = AdvancedConfig.getInstance().getThickFurModifier();
 
-    public static int chargeUnlockLevel = AdvancedConfig.getInstance().getChargeUnlock();
+    public static double wolfCommandRange = 10.0;
 
     public static int wolfXp   = ExperienceConfig.getInstance().getTamingXPWolf();
     public static int ocelotXp = ExperienceConfig.getInstance().getTamingXPOcelot();

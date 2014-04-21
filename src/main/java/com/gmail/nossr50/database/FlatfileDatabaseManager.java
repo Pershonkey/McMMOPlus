@@ -302,7 +302,7 @@ public final class FlatfileDatabaseManager implements DatabaseManager {
                         writer.append(profile.getSkillXpLevel(SkillType.SWORDS)).append(":");
                         writer.append(profile.getSkillXpLevel(SkillType.AXES)).append(":");
                         writer.append(profile.getSkillXpLevel(SkillType.ACROBATICS)).append(":");
-                        writer.append(":");
+                        writer.append((int) profile.getAbilityDATS(AbilityType.CHARGE)).append(":");
                         writer.append(profile.getSkillLevel(SkillType.TAMING)).append(":");
                         writer.append(profile.getSkillXpLevel(SkillType.TAMING)).append(":");
                         writer.append((int) profile.getAbilityDATS(AbilityType.BERSERK)).append(":");
@@ -409,7 +409,7 @@ public final class FlatfileDatabaseManager implements DatabaseManager {
                 out.append("0:"); // SwordsXp
                 out.append("0:"); // AxesXp
                 out.append("0:"); // AcrobaticsXp
-                out.append(":");
+                out.append("0:"); // DATS
                 out.append("0:"); // Taming
                 out.append("0:"); // TamingXp
                 out.append("0:"); // DATS
@@ -881,6 +881,15 @@ public final class FlatfileDatabaseManager implements DatabaseManager {
                             }
                         }
 
+                        if (character[23].isEmpty()) {
+                            // Addition of "Charge" Taming ability
+                            // Version 1.5.01
+                            line = line.replace(character[23], "0:");
+                            if (oldVersion == null) {
+                                oldVersion = "1.5.01";
+                            }
+                        }
+
                         // If they're valid, rewrite them to the file.
                         if (character.length == 42) {
                             writer.append(line).append("\r\n");
@@ -1097,7 +1106,7 @@ public final class FlatfileDatabaseManager implements DatabaseManager {
         skillsXp.put(SkillType.FISHING, (float) Integer.valueOf(character[35]));
         skillsXp.put(SkillType.ALCHEMY, (float) Integer.valueOf(character[40]));
 
-        // Taming - Unused
+        skillsDATS.put(AbilityType.CHARGE, Integer.valueOf(character[23]));
         skillsDATS.put(AbilityType.SUPER_BREAKER, Integer.valueOf(character[32]));
         // Repair - Unused
         skillsDATS.put(AbilityType.TREE_FELLER, Integer.valueOf(character[28]));

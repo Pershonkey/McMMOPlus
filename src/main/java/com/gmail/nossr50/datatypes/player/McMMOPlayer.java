@@ -5,9 +5,12 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Sound;
+import org.bukkit.entity.EntityType;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.metadata.FixedMetadataValue;
@@ -43,6 +46,7 @@ import com.gmail.nossr50.skills.repair.RepairManager;
 import com.gmail.nossr50.skills.salvage.SalvageManager;
 import com.gmail.nossr50.skills.smelting.SmeltingManager;
 import com.gmail.nossr50.skills.swords.SwordsManager;
+import com.gmail.nossr50.skills.taming.Taming;
 import com.gmail.nossr50.skills.taming.TamingManager;
 import com.gmail.nossr50.skills.unarmed.UnarmedManager;
 import com.gmail.nossr50.skills.woodcutting.WoodcuttingManager;
@@ -728,6 +732,21 @@ public class McMMOPlayer {
             return;
         }
 
+        LivingEntity livingEntity = null;
+
+        if (ability == AbilityType.CHARGE) {
+            livingEntity = this.getTamingManager().getTarget(20);
+
+            if (!this.getTamingManager().isEntityTypeNearby(EntityType.WOLF, Taming.wolfCommandRange, true)) {
+                player.sendMessage(ChatColor.RED + "**NO WOLVES NEARBY**");
+                return;
+            }
+            else if (livingEntity == null) {
+                player.sendMessage(ChatColor.RED + "**NO TARGET FOUND**");
+                return;
+            }
+        }
+
         if (EventUtils.callPlayerAbilityActivateEvent(player, skill).isCancelled()) {
             return;
         }
@@ -749,6 +768,10 @@ public class McMMOPlayer {
 
         if (ability == AbilityType.SUPER_BREAKER || ability == AbilityType.GIGA_DRILL_BREAKER) {
             SkillUtils.handleAbilitySpeedIncrease(player);
+        }
+
+        if (ability == AbilityType.CHARGE) {
+            this.getTamingManager().handleCharge(livingEntity);
         }
 
         new AbilityDisableTask(this, ability).runTaskLater(mcMMO.p, ticks * Misc.TICK_CONVERSION_FACTOR);
@@ -790,6 +813,11 @@ public class McMMOPlayer {
                     player.sendMessage(LocaleLoader.getString("Skills.TooTired", timeRemaining));
                     return;
                 }
+            }
+
+            if (ability == AbilityType.CHARGE && !this.getTamingManager().isEntityTypeNearby(EntityType.WOLF, Taming.wolfCommandRange, true)) {
+                player.sendMessage(ChatColor.RED + "**NO WOLVES NEARBY**");
+                return;
             }
 
             if (Config.getInstance().getAbilityMessagesEnabled()) {

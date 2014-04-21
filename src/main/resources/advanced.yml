@@ -521,12 +521,6 @@ Skills:
             MinHorseJumpStrength: 0.7
             MaxHorseJumpStrength: 2.0
 
-        Charge:
-            # UnlockLevel: Level when Charge unlocks
-            # ChanceMax: Maximum chance of triggering charge
-            UnlockLevel: 50
-            Chance: 25.0
-
         Pummel:
             # ChanceMax: Maximum chance of triggering pummel
             Chance: 10.0
