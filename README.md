@@ -1,15 +1,15 @@
-# mcMMO
-## The RPG lovers mod
-
-### Dev builds
-Our latest development builds are available ~~[here](http://ci.mcmmo.info)~~. Unfortunately, the mcMMO site is down; a temporary dev build location is hosted [here](http://ci.ecocitycraft.com/job/mcMMO/).
+# mcMMOPlus
+## An addon for mcmmo
 
 ### Brief Description
 The goal of mcMMO is to take core Minecraft game mechanics and expand them into add an extensive and quality RPG experience. Everything in mcMMO has been carefully thought out and is constantly being improved upon. Currently, mcMMO adds fourteen unique skills to train and level in. Each of these skills is highly customizable through our configuration files, allowing server admins to tweak mcMMO to best suit the needs of his or her server. Know that the mcMMO team is dedicated to providing an ever-evolving experience, and that we carefully read all feedback and bug reports in order to evaluate and balance the mechanics of mcMMO in every update.
 
-## About the Team
+## Credit
+Made by ile123ile and Pershonkey
 
-mcMMO is currently developed by a team of individuals from all over the world.
+## mcMMO Credits
+
+mcMMOPlus is an addon for mcMMO, which is currently developed by a team of individuals from all over the world
 ### Glorious Leader
 [![gmcferrin](http://www.gravatar.com/avatar/b64c52daf25d206b27650788b5813b7b.png)]
 (https://github.com/gmcferrin)
